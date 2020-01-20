@@ -3,7 +3,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-class Profiler {
+class SampleProfiler {
     // Adapted from
     // https://stackoverflow.com/questions/14915319/get-output-of-terminal-command-using-java?lq=1.
     private static String executeCommand(String command) throws IOException {
