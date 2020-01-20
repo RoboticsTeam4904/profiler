@@ -1,8 +1,8 @@
-package tests.examples;
+package src.tests.examples;
 
-class ForLoop {
+public class ForLoop {
     public static void main(String[] args) {
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 20000000; i++) {
             ForLoop.printOut(i);
         }
     }
