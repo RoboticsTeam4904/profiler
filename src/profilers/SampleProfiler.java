@@ -1,10 +1,11 @@
 package src.profilers;
 
-import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SampleProfiler {
     // Adapted from
@@ -19,12 +20,9 @@ public class SampleProfiler {
      *                     shell.
      * @return The output of the command in {@code String} format.
      */
-    private static String executeCommand(String... command) throws IOException {
-        ProcessBuilder builder = new ProcessBuilder(command);
-        builder.redirectErrorStream(true);
+    private static String executeCommand(ProcessBuilder builder) throws IOException {
         Process process = builder.start();
-        InputStream is = process.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
         String ret = "";
         String temp = "";
@@ -46,7 +44,9 @@ public class SampleProfiler {
      */
     public static String[] profile(int pid) {
         try {
-            String cv = SampleProfiler.executeCommand("jstack", Integer.toString(pid));
+            ProcessBuilder builder = new ProcessBuilder("jstack", Integer.toString(pid));
+            builder.redirectErrorStream(true);
+            String cv = SampleProfiler.executeCommand(builder);
             String[] cvs = cv.split("\n\n", 0)[2].split("\n", 0);
             String[] retcvs = new String[10000]; // max stack trace length is 10000
 
@@ -63,5 +63,32 @@ public class SampleProfiler {
             System.out.println(e.getMessage());
             return new String[0];
         }
+    }
+
+    /**
+     * Executes the {@code jstack} command via {@code java.lang.ProcessBuilder},
+     * formats its output, and returns it as a {@code String[]}.
+     * 
+     * @param pid   The PID of the Java process to profile.
+     * @param times How many times to profile the given PID.
+     * @throws IOException Thrown if there is an error retrieving/sending I/O data
+     *                     to the shell.
+     * @return A HashMap containing the call signatures and how often they appeared
+     *         in the samples.
+     */
+    public static Map<String, Integer> profile(int pid, int times) {
+        Map<String, Integer> hm = new HashMap<String, Integer>();
+        for (int i = 0; i < times; i++) {
+            System.out.println(Integer.toString(i) + " of " + Integer.toString(times));
+            String[] prof_ret = SampleProfiler.profile(pid);
+            for (String sig : prof_ret) {
+                if (hm.get(sig) == null) {
+                    hm.put(sig, 1);
+                } else {
+                    hm.put(sig, hm.get(sig) + 1);
+                }
+            }
+        }
+        return hm;
     }
 }
